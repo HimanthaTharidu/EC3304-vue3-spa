@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { ref } from 'vue'; 
+import  {useAuth} from '../composable/useAuth';
+
+const {login} = useAuth();
 const username = ref('');
 const password = ref('');
 const errorMessage = ref('');
-const handleSubmit = () => { console.log('Form submmited with :', username.value , password.value);};
+
 
 const handleLogin = async () => {
     try{
@@ -16,7 +19,7 @@ const handleLogin = async () => {
                 
                 username: username.value,
                 password: password.value,
-                //expiresInMins:30, // optional, defaults to 60
+                expiresInMins:30, // optional, defaults to 60
             }),
             //credentials: 'include' // Include cookies (e.g., accessToken) in the request
             })
@@ -25,12 +28,15 @@ const handleLogin = async () => {
             if(!response.ok){
                 throw new Error(data.message || "login Failed")
             }
-            localStorage.setItem('userToken', data.token);
-            console.log("Login Sucessful! Token stored.")
+            login(data.token);
     }
-    catch (error : any){
+    catch (error : unknown){
+        if (error instanceof Error){
         errorMessage.value = error.message;
-        console.log('Login error:', error)
+        }else{
+        errorMessage.value = 'An unknown error occurred during login.';
+        }
+        console.error('Login error:', error);
     }
 };
 
@@ -50,7 +56,7 @@ const handleLogin = async () => {
                 placeholder="Enter your username" />
             </div>
             <div class="mb-6">
-                <label class="mb- block text-sm font-medium text-gray-700">Password</label>
+                <label class="mb-2 block text-sm font-medium text-gray-700">Password</label>
                 <input 
                 v-model="password"
                 type="password" 
